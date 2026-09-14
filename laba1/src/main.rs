@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-// Структура для хранения палитры цветов.
+/// Структура для хранения палитры цветов.
 #[derive(Resource)]
 struct ColorPalette {
     colors: Vec<Color>,
@@ -10,7 +10,7 @@ struct ColorPalette {
 }
 
 impl ColorPalette {
-    // Конструктор для создания палитры цветов.
+    /// Конструктор для создания палитры цветов.
     fn new() -> Self {
         Self {
             colors: vec![
@@ -26,17 +26,17 @@ impl ColorPalette {
         }
     }
 
-    // Получаем текущий цвет
+    /// Получаем текущий цвет
     fn current_color(&self) -> Color {
         self.colors[self.current_index]
     }
 
-    // Функция для перехода к следующему цвету.
+    /// Функция для перехода к следующему цвету.
     fn next_color(&mut self) {
         self.current_index = (self.current_index + 1) % self.colors.len();
     }
 
-    // Функция для установки цвета по индексу.
+    /// Функция для установки цвета по индексу.
     fn set_color(&mut self, index: usize) {
         self.current_index = index;
     }
@@ -151,7 +151,7 @@ fn listen_keyboard(
     }
 }
 
-// Система смены цвета
+/// Система смены цвета
 fn automatic_color_system(
     time: Res<Time>,
     mut palette: ResMut<ColorPalette>,
@@ -165,7 +165,7 @@ fn automatic_color_system(
 }
 
 
-// Обновляет цвет торуса на основе текущего цвета палитры.
+/// Обновляет цвет торуса на основе текущего цвета палитры.
 fn update_torus_color_system(
     palette: Res<ColorPalette>,
     mut materials: ResMut<Assets<StandardMaterial>>, // Ресурс всех материалов стандартного типа
@@ -180,17 +180,19 @@ fn update_torus_color_system(
 }
 
 
-// Маркер-компонент указывает, какой тор должен вращаться.
+/// Маркер-компонент указывает, какой тор должен вращаться.
 #[derive(Component)]
 struct TorusMarker;
 
-// Система вращения тора
+const TORUS_ROTATE_SPEED: f32 = 3.; /// Скорость вращения тора в радианах
+
+/// Система вращения тора
 fn torus_rotate_system(
     time: Res<Time>,
     mut query: Query<&mut Transform, With<TorusMarker>>,
 ) {
     for mut transform in &mut query {
-        transform.rotate_x(1.0 * time.delta_secs());
-        transform.rotate_y(1.0 * time.delta_secs());
+        transform.rotate_x(TORUS_ROTATE_SPEED * time.delta_secs());
+        transform.rotate_y(TORUS_ROTATE_SPEED * time.delta_secs());
     }
 }
