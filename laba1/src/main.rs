@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+// Структура для хранения палитры цветов.
 #[derive(Resource)]
 struct ColorPalette {
     colors: Vec<Color>,
@@ -9,73 +10,85 @@ struct ColorPalette {
 }
 
 impl ColorPalette {
+    // Конструктор для создания палитры цветов.
     fn new() -> Self {
         Self {
             colors: vec![
+                Color::srgb(0.0, 1.0, 1.0),
+                Color::srgb(1.0, 0.5, 0.0),
+                Color::srgb(0.0, 0.0, 1.0),
                 Color::BLACK,
-                Color::WHITE,
-                Color::srgb(0.0, 0.2, 1.0),
-                Color::srgb(1.0, 0.0, 0.0),
-                Color::srgb(0.6, 0.0, 1.0),
+                Color::WHITE
             ],
-            current_index: 2,
+            current_index: 0,
             automatic: false,
             timer: Timer::from_seconds(1.0, TimerMode::Repeating),
         }
     }
 
+    // Получаем текущий цвет
     fn current_color(&self) -> Color {
         self.colors[self.current_index]
     }
 
+    // Функция для перехода к следующему цвету.
     fn next_color(&mut self) {
         self.current_index = (self.current_index + 1) % self.colors.len();
     }
 
+    // Функция для установки цвета по индексу.
     fn set_color(&mut self, index: usize) {
-        if index < self.colors.len() {
-            self.current_index = index;
-        }
+        self.current_index = index;
     }
 }
 
 fn main() {
     App::new()
+        // Добавляем стандартные плагины
         .add_plugins(DefaultPlugins)
+
+        // Устанавливаем цвет заливки окна
         .insert_resource(ClearColor(Color::srgb(0.05, 0.05, 0.08)))
+
+        // Ресурсом добавляем нашу палитру цветов
         .insert_resource(ColorPalette::new())
+
+        // Добавляем функцию setup как инициализирующую
         .add_systems(Startup, setup)
+
+        // Добавляем 4 функции выполняемые каждый кадр
         .add_systems(
             Update,
             (
-                keyboard_color_system,
+                listen_keyboard,
                 automatic_color_system,
                 update_torus_color_system,
-                rotate_torus_system,
+                torus_rotate_system,
             ),
         )
         .run();
 }
 
 fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut commands: Commands, // команды для манипулирования сценой
+    mut meshes: ResMut<Assets<Mesh>>, // ресурс хранящий меши
+    mut materials: ResMut<Assets<StandardMaterial>>, // ресурс хранящий материалы
 ) {
     // Создаём геометрию тора.
-    let torus = meshes.add(Torus::new(1.0, 0.4));
+    let torus_mesh = meshes.add(Torus::new(1.0, 0.4));
 
     // Создаём материал тора.
     let material = materials.add(StandardMaterial {
-        base_color: Color::srgb(0.0, 0.2, 1.0),
+        base_color: Color::srgb(0.0, 0.0, 1.0),
         ..default()
     });
 
     // Создаём Entity тора.
     commands.spawn((
-        Mesh3d(torus),
+        Mesh3d(torus_mesh),
         MeshMaterial3d(material),
         Transform::from_xyz(0.0, 0.0, 0.0),
+        TorusMarker, // специальный маркер компонент чтобы найти наш тор среди других мешей
     ));
 
     // Создаём камеру.
@@ -85,26 +98,31 @@ fn setup(
             .looking_at(Vec3::ZERO, Vec3::Y),
     ));
 
-    // Создаём источник света.
+    // Добавляем направленный источник света.
     commands.spawn((
-        PointLight {
-            intensity: 1500.0,
+        DirectionalLight {
+            illuminance: 3000.0,
             ..default()
         },
-        Transform::from_xyz(3.0, 4.0, 5.0),
+        Transform::from_xyz(0.0, 5.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 }
 
-fn keyboard_color_system(
+
+fn listen_keyboard(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut palette: ResMut<ColorPalette>,
 ) {
+    /////////////////////////////////////////////////////////
     // Пробел переключает следующий цвет.
+    /////////////////////////////////////////////////////////
     if keyboard.just_pressed(KeyCode::Space) {
         palette.next_color();
     }
 
-    // Клавиши 1-5 выбирают цвет напрямую.
+    /////////////////////////////////////////////////////////
+    // 1-5 переключают цвет по индексу.
+    /////////////////////////////////////////////////////////
     if keyboard.just_pressed(KeyCode::Digit1) {
         palette.set_color(0);
     }
@@ -125,38 +143,54 @@ fn keyboard_color_system(
         palette.set_color(4);
     }
 
-    // Клавиша A включает или выключает автоматическую смену.
+    /////////////////////////////////////////////////////////
+    // A переключает автоматическую систему смены цвета.
+    /////////////////////////////////////////////////////////
     if keyboard.just_pressed(KeyCode::KeyA) {
         palette.automatic = !palette.automatic;
     }
 }
 
+// Система смены цвета
 fn automatic_color_system(
     time: Res<Time>,
     mut palette: ResMut<ColorPalette>,
 ) {
+    /*
+     * ! Цвет меняется если автоматическая система включена и таймер завершился в этом кадре
+    */
     if palette.automatic && palette.timer.tick(time.delta()).just_finished() {
         palette.next_color();
     }
 }
 
+
+// Обновляет цвет торуса на основе текущего цвета палитры.
 fn update_torus_color_system(
     palette: Res<ColorPalette>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    query: Query<&MeshMaterial3d<StandardMaterial>>,
+    mut materials: ResMut<Assets<StandardMaterial>>, // Ресурс всех материалов стандартного типа
+    query: Query<&MeshMaterial3d<StandardMaterial>, With<TorusMarker>>, // Запрос на материалы торусов
 ) {
     for material_handle in &query {
+        // пытаемся получить получить материал по его дескриптору (.0)
         if let Some(mut material) = materials.get_mut(&material_handle.0) {
-            material.base_color = palette.current_color();
+            material.base_color = palette.current_color(); // устанавливаем цвет
         }
     }
 }
 
-fn rotate_torus_system(
+
+// Маркер-компонент указывает, какой тор должен вращаться.
+#[derive(Component)]
+struct TorusMarker;
+
+// Система вращения тора
+fn torus_rotate_system(
     time: Res<Time>,
-    mut query: Query<&mut Transform, With<Mesh3d>>,
+    mut query: Query<&mut Transform, With<TorusMarker>>,
 ) {
     for mut transform in &mut query {
+        transform.rotate_x(1.0 * time.delta_secs());
         transform.rotate_y(1.0 * time.delta_secs());
     }
 }
