@@ -14,11 +14,11 @@ impl ColorPalette {
     fn new() -> Self {
         Self {
             colors: vec![
-                Color::srgb(0.0, 1.0, 1.0),
-                Color::srgb(1.0, 0.5, 0.0),
-                Color::srgb(0.0, 0.0, 1.0),
                 Color::BLACK,
-                Color::WHITE
+                Color::WHITE,
+                Color::srgb(0.0, 0.0, 1.0),
+                Color::srgb(1.0, 0.0, 0.0),
+                Color::srgb(0.5, 0.0, 1.0),
             ],
             current_index: 0,
             automatic: false,
