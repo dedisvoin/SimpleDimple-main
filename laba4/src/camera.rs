@@ -1,24 +1,11 @@
-// Модуль, содержащий структуру CameraRig, которая управляет положением и ориентацией камеры в 3D пространстве.
-
 use bevy::prelude::*;
 
-// ==========================================
-// Константы для ограничения движения и вращения камеры
-// ==========================================
+const MIN_ANGLE_Y_DEG: f32 = 0.0;
+const MAX_ANGLE_Y_DEG: f32 = 89.0;
 
-/// Минимальный и максимальный угол возвышения камеры.
-const MIN_ANGLE_Y_DEG: f32 = 5.0;
-const MAX_ANGLE_Y_DEG: f32 = 85.0;
-
-/// Минимальное и максимальное расстояние до точки наблюдения.
 const MIN_RADIUS: f32 = 5.0;
 const MAX_RADIUS: f32 = 100.0;
 
-// ==========================================
-// Структура CameraRig
-// ==========================================
-
-/// Управляет положением и ориентацией камеры в 3D пространстве.
 #[derive(Resource)]
 pub struct CameraRig {
     /// Расстояние от камеры до точки наблюдения.
@@ -32,7 +19,6 @@ pub struct CameraRig {
 }
 
 impl CameraRig {
-    // конструктор
     pub fn new(position: Vec3) -> Self {
         let mut camera = Self {
             radius: 0.0,
@@ -52,10 +38,6 @@ impl CameraRig {
         self.angle_x_deg = position.x.atan2(position.z).to_degrees();
         self.angle_y_deg = (position.y / self.radius).asin().to_degrees();
     }
-    
-    // pub fn position(&self) -> Vec3 {
-    //     self.position
-    // }
 
     // методы для перемещения камеры
     pub fn rotate_left_right(&mut self, degrees: f32) {

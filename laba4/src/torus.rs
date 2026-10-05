@@ -1,119 +1,131 @@
-// Модуль для управления тороидальными объектами сцены.
-
 use bevy::prelude::*;
 
 use crate::graphic_object::GraphicObject;
 
-/// Скорость вращения объектов вокруг центра сцены (радианы в секунду).
-const TORUS_ORBIT_SPEED: f32 = 0.5;
-
-/// Палитра цветов для перекрашивания графических объектов.
-#[derive(Resource)]
-struct ColorPalette {
+/// Палитра цветов тора.
+#[derive(Component, Debug)]
+pub struct ColorPalette {
+    /// Список цветов палитры, первый — начальный цвет тора.
     colors: Vec<Color>,
-    current_index: usize,
+    /// Индекс выбранного цвета в списке.
+    selected_index: usize,
+    /// Накопленная доля шага для плавной смены цвета.
+    accumulated_steps: f32,
 }
+
+/// Автоматическая смена цветов: включается и выключается клавишей A.
+#[derive(Resource, Default)]
+pub struct AutoColorChange {
+    pub enabled: bool,
+}
+
+/// Общие цвета сцены.
+const PALETTE_COLORS: [Color; 4] = [
+    Color::srgb(1.0, 0.0, 0.0), // красный
+    Color::srgb(0.0, 0.0, 1.0), // синий
+    Color::srgb(1.0, 1.0, 0.0), // жёлтый
+    Color::srgb(0.0, 1.0, 0.0), // зелёный
+];
+
+/// Скорость автоматической смены цветов, шагов палитры в секунду.
+const AUTO_STEPS_PER_SEC: f32 = 0.8;
 
 /// Плагин для управления тороидальными объектами сцены.
 pub struct TorusPlugin;
 
 impl Plugin for TorusPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ColorPalette::new());
-        app.add_systems(
-            Update,
-            (
-                update_toruses, 
-                update_torus_color_system, 
-                torus_orbit_system
-            )
-        );
+        app.init_resource::<AutoColorChange>()
+            .add_systems(PostStartup, setup_torus_palettes)
+            .add_systems(
+                Update,
+                (update_toruses, auto_change_colors, update_torus_colors).chain(),
+            );
     }
 }
 
 impl ColorPalette {
-    /// Конструктор для создания палитры цветов.
-    pub fn new() -> Self {
+    /// Палитра тора: начинается с его начального цвета, затем идут общие цвета
+    /// сцены. Список у тора с номером `torus_number` начинается с цвета под этим
+    /// номером, поэтому при одинаковых индексах торы имеют разные цвета.
+    pub fn new(start_color: Color, torus_number: usize) -> Self {
+        let colors: Vec<Color> = std::iter::once(start_color)
+            .chain(
+                (0..PALETTE_COLORS.len())
+                    .map(|i| PALETTE_COLORS[(i + torus_number) % PALETTE_COLORS.len()]),
+            )
+            .collect();
+
         Self {
-            colors: vec![
-                Color::BLACK,
-                Color::WHITE,
-                Color::srgb(0.0, 0.0, 1.0),
-                Color::srgb(1.0, 0.0, 0.0),
-                Color::srgb(0.5, 0.0, 1.0),
-            ],
-            current_index: 0,
+            colors,
+            selected_index: 0,
+            accumulated_steps: 0.0,
         }
     }
 
-    /// Получаем текущий цвет.
-    pub fn current_color(&self) -> Color {
-        self.colors[self.current_index]
+    /// Выбранный цвет палитры.
+    pub fn selected_color(&self) -> Color {
+        self.colors[self.selected_index]
     }
 
-    /// Функция для перехода к следующему цвету.
-    pub fn next_color(&mut self) {
-        self.current_index = (self.current_index + 1) % self.colors.len();
+    /// Увеличивает индекс выбранного цвета на единицу по кругу.
+    fn select_next(&mut self) {
+        self.selected_index = (self.selected_index + 1) % self.colors.len();
     }
 
-    /// Функция для установки цвета по индексу.
-    pub fn set_color(&mut self, index: usize) {
-        self.current_index = index;
+    /// Накапливает шаги и увеличивает индекс на целое число шагов.
+    fn advance(&mut self, steps: f32) {
+        self.accumulated_steps += steps;
+
+        while self.accumulated_steps >= 1.0 {
+            self.accumulated_steps -= 1.0;
+            self.select_next();
+        }
     }
 }
 
-/// Обновляет цвет всех графических объектов на основе текущего цвета палитры.
-fn update_torus_color_system(
-    palette: Res<ColorPalette>,
-    mut materials: ResMut<Assets<StandardMaterial>>, // ресурс всех материалов
-    query: Query<&MeshMaterial3d<StandardMaterial>, With<GraphicObject>>, // материалы торов
+/// Создаёт каждому тору собственную палитру с его начальным цветом.
+fn setup_torus_palettes(mut commands: Commands, toruses: Query<(Entity, &GraphicObject)>) {
+    for (torus_number, (entity, object)) in toruses.iter().enumerate() {
+        commands
+            .entity(entity)
+            .insert(ColorPalette::new(object.to_color(), torus_number));
+    }
+}
+
+/// Клавиша A включает и выключает автоматическую смену цветов.
+fn update_toruses(keyboard: Res<ButtonInput<KeyCode>>, mut auto: ResMut<AutoColorChange>) {
+    if keyboard.just_pressed(KeyCode::KeyA) {
+        auto.enabled = !auto.enabled;
+    }
+}
+
+/// Включён авторежим — увеличивает индекс цвета в палитре каждого тора.
+fn auto_change_colors(
+    time: Res<Time>,
+    auto: Res<AutoColorChange>,
+    mut palettes: Query<&mut ColorPalette>,
 ) {
-    for material_handle in &query {
-        // Пытаемся получить материал по его дескриптору (.0).
+    if !auto.enabled {
+        return;
+    }
+
+    // Одинаковое число шагов для всех торов — индексы растут одновременно.
+    let steps = time.delta_secs() * AUTO_STEPS_PER_SEC;
+
+    for mut palette in &mut palettes {
+        palette.advance(steps);
+    }
+}
+
+/// Применяет выбранный цвет палитры к материалу тора.
+fn update_torus_colors(
+    mut materials: ResMut<Assets<StandardMaterial>>, // ресурс всех материалов
+    toruses: Query<(&ColorPalette, &MeshMaterial3d<StandardMaterial>)>, // палитра и материал
+) {
+    for (palette, material_handle) in &toruses {
         if let Some(mut material) = materials.get_mut(&material_handle.0) {
-            material.base_color = palette.current_color(); // устанавливаем цвет
+            material.base_color = palette.selected_color();
         }
-    }
-}
-
-/// Система вращения всех графических объектов вокруг центра координат.
-///
-/// Каждый кадр матрица модели объекта поворачивается вокруг начала координат:
-/// торы движутся по окружности, а их «носики» остаются направленными в центр.
-fn torus_orbit_system(time: Res<Time>, mut query: Query<&mut Transform, With<GraphicObject>>) {
-    for mut transform in &mut query {
-        transform.rotate_around(
-            Vec3::ZERO,
-            Quat::from_rotation_y(TORUS_ORBIT_SPEED * time.delta_secs()),
-        );
-    }
-}
-
-/// Система обработки нажатий клавиатуры для управления палитрой.
-fn update_toruses(keyboard: Res<ButtonInput<KeyCode>>, mut palette: ResMut<ColorPalette>) {
-    // Пробел переключает следующий цвет.
-    if keyboard.just_pressed(KeyCode::Space) {
-        palette.next_color();
-    }
-
-    // 1-5 переключают цвет по индексу.
-    if keyboard.just_pressed(KeyCode::Digit1) {
-        palette.set_color(0);
-    }
-
-    if keyboard.just_pressed(KeyCode::Digit2) {
-        palette.set_color(1);
-    }
-
-    if keyboard.just_pressed(KeyCode::Digit3) {
-        palette.set_color(2);
-    }
-
-    if keyboard.just_pressed(KeyCode::Digit4) {
-        palette.set_color(3);
-    }
-
-    if keyboard.just_pressed(KeyCode::Digit5) {
-        palette.set_color(4);
     }
 }

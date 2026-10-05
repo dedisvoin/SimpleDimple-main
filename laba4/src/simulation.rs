@@ -23,10 +23,10 @@ pub fn simulate_camera(
 
     // Поворот влево/вправо.
     if keyboard.pressed(KeyCode::ArrowLeft) {
-        camera.rotate_left_right(ROTATION_SPEED_DEG_PER_SEC * delta_time);
+        camera.rotate_left_right(-ROTATION_SPEED_DEG_PER_SEC * delta_time);
     }
     if keyboard.pressed(KeyCode::ArrowRight) {
-        camera.rotate_left_right(-ROTATION_SPEED_DEG_PER_SEC * delta_time);
+        camera.rotate_left_right(ROTATION_SPEED_DEG_PER_SEC * delta_time);
     }
 
     // Поворот вверх/вниз.

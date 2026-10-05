@@ -97,19 +97,3 @@ pub fn update_object_labels(
         node.top = Val::Px(viewport.y - 60.0);
     }
 }
-
-pub fn print_cursor(
-    windows: Query<&Window>,
-    mut last_cursor_pos: Local<Option<Vec2>>,
-) {
-    for window in &windows {
-        if let Some(cursor) = window.cursor_position() {
-            if Some(cursor) != *last_cursor_pos {
-                *last_cursor_pos = Some(cursor);
-                println!("Курсор: x = {}, y = {}", cursor.x, cursor.y);
-            }
-        } else {
-            *last_cursor_pos = None;
-        }
-    }
-}

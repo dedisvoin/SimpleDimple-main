@@ -12,14 +12,11 @@ mod torus;
 use camera::CameraRig;
 use data::{initial_camera_position, scene_objects};
 use display::{
-    FPSText, FpsCounter, ObjectLabel, 
-    update_fps, update_object_labels, update_window_title, print_cursor
+    FPSText, FpsCounter, ObjectLabel, update_fps, update_object_labels, update_window_title,
 };
-use graphic_object::{spawn_graphic_object};
-use simulation::{
-    apply_camera_transform, simulate_camera
-};
-use torus::{TorusPlugin};
+use graphic_object::spawn_graphic_object;
+use simulation::{apply_camera_transform, simulate_camera};
+use torus::TorusPlugin;
 
 /// Инициализация сцены: объекты, камера и освещение.
 fn setup_scene(
@@ -88,9 +85,7 @@ fn setup_scene(
     ));
 }
 
-/// ==========================================
 /// Главная функция
-/// ==========================================
 fn main() {
     App::new()
         // Добавляем стандартные плагины Bevy.
@@ -102,14 +97,12 @@ fn main() {
             ..default()
         }))
         .add_plugins(TorusPlugin)
-
         // Обновляем сцену каждый кадр без ограничений.
         .insert_resource(WinitSettings::continuous())
         .insert_resource(ClearColor(Color::srgb(0.02, 0.03, 0.09)))
         // Ресурсом добавляем палитру цветов.
         .insert_resource(CameraRig::new(initial_camera_position()))
         .insert_resource(FpsCounter::default())
-        
         .add_systems(Startup, setup_scene)
         .add_systems(
             Update,
@@ -119,9 +112,8 @@ fn main() {
                 update_object_labels,
                 update_fps,
                 update_window_title,
-                print_cursor,
             )
-            .chain(),
+                .chain(),
         )
         .run();
 }
