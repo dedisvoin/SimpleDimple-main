@@ -1,6 +1,3 @@
-// Модуль, содержащий структуры и системы для отображения информации на экране,
-// такой как счетчик кадров в секунду (FPS) и подписи объектов.
-
 use std::time::Duration;
 
 use crate::graphic_object::GraphicObject;
@@ -68,8 +65,7 @@ pub fn update_window_title(
 /// Система размещения UI-подписей.
 ///
 /// Каждый кадр мировая позиция тора проецируется в координаты окна, и подпись
-/// с его номером выводится чуть выше тора. Задние/вышедшие за кадр торы не
-/// получают подпись.
+/// с его номером выводится чуть выше тора.
 pub fn update_object_labels(
     cameras: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
     mut labels: Query<(&mut Node, &ObjectLabel)>,
