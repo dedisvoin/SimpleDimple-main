@@ -33,7 +33,7 @@ pub fn update_fps(
 
     let elapsed_secs = counter.elapsed.as_secs_f32();
 
-    if elapsed_secs >= 0.5 {
+    if elapsed_secs >= 0.2 {
         counter.fps = (counter.frames as f32 / elapsed_secs).max(0.0);
         counter.frames = 0;
         counter.elapsed = Duration::ZERO;

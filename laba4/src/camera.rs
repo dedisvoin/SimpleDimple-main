@@ -53,7 +53,7 @@ impl CameraRig {
         self.recalculate_position();
     }
 
-    // получение Transform для сущности камеры
+    // устанавливаем камеру в нужную позицию
     pub fn transform(&self) -> Transform {
         Transform::from_translation(self.position).looking_at(Vec3::ZERO, Vec3::Y)
     }
