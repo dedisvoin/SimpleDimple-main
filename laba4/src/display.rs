@@ -46,21 +46,21 @@ pub fn update_fps(
 }
 
 /// Система обновления заголовка окна с текущим FPS.
-pub fn update_window_title(
-    mut windows: Query<&mut Window>,
-    counter: Res<FpsCounter>,
-    mut last_fps: Local<u32>,
-) {
-    let fps = counter.fps.round().max(0.0) as u32;
+// pub fn update_window_title(
+//     mut windows: Query<&mut Window>,
+//     counter: Res<FpsCounter>,
+//     mut last_fps: Local<u32>,
+// ) {
+//     let fps = counter.fps.round().max(0.0) as u32;
 
-    if fps != *last_fps {
-        *last_fps = fps;
+//     if fps != *last_fps {
+//         *last_fps = fps;
 
-        for mut window in &mut windows {
-            window.title = format!("Lab04 [{fps} FPS]");
-        }
-    }
-}
+//         for mut window in &mut windows {
+//             window.title = format!("Lab04 [{fps} FPS]");
+//         }
+//     }
+// }
 
 /// Система размещения UI-подписей.
 ///

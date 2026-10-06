@@ -12,7 +12,7 @@ mod torus;
 use camera::CameraRig;
 use data::{initial_camera_position, scene_objects};
 use display::{
-    FPSText, FpsCounter, ObjectLabel, update_fps, update_object_labels, update_window_title,
+    FPSText, FpsCounter, ObjectLabel, update_fps, update_object_labels,
 };
 use graphic_object::spawn_graphic_object;
 use simulation::{apply_camera_transform, simulate_camera};
@@ -110,8 +110,7 @@ fn main() {
                 simulate_camera,
                 apply_camera_transform,
                 update_object_labels,
-                update_fps,
-                update_window_title,
+                update_fps
             )
                 .chain(),
         )
