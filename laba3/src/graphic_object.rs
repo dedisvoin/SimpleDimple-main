@@ -6,6 +6,7 @@ pub struct GraphicObject {
     pub position: Vec3,
     pub angle_deg: f32,
     pub color: Vec3,
+    pub color_index: usize,
 }
 
 impl GraphicObject {
@@ -14,6 +15,7 @@ impl GraphicObject {
             position,
             angle_deg,
             color,
+            color_index: 0, // будет выставлен при спавне
         }
     }
 
@@ -22,29 +24,37 @@ impl GraphicObject {
         Transform::from_translation(self.position).with_rotation(Quat::from_rotation_y(angle_rad))
     }
 
-    /// Преобразование цвета `(r, g, b)` в цвет Bevy.
     pub fn to_color(&self) -> Color {
         Color::srgb(self.color.x, self.color.y, self.color.z)
     }
-}
 
+    /// Переход к следующему цвету палитры.
+    pub fn advance_color(&mut self, palette_len: usize) {
+        if palette_len > 0 {
+            self.color_index = (self.color_index + 1) % palette_len;
+        }
+    }
+}
 
 pub fn spawn_graphic_object(
     commands: &mut Commands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
-    object: GraphicObject,
+    mut object: GraphicObject,
+    color_index: usize,
+    palette: &[Vec3],
 ) -> Entity {
-    // Модель тора один раз кладётся в Assets<Mesh> и переиспользуется всеми объектами.
     let torus_mesh = meshes.add(Torus::new(1.0, 0.4));
 
-    // Материал с цветом объекта.
+    // Присваиваем индивидуальный цвет из палитры.
+    object.color_index = color_index;
+    object.color = palette[color_index];
+
     let material = materials.add(StandardMaterial {
         base_color: object.to_color(),
         ..default()
     });
 
-    // Создаём сущность с мешем, материалом, матрицей модели и данными объекта.
     commands
         .spawn((
             Mesh3d(torus_mesh),

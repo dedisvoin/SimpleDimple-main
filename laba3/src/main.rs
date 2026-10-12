@@ -29,9 +29,7 @@ fn main() {
                 update_fps_text,
                 torus_orbit_system,
                 update_object_labels,
-                listen_keyboard,
-                automatic_color_system,
-                update_torus_color_system,
+                simulation,
             ),
         )
         .run();
@@ -55,8 +53,14 @@ fn setup_scene(
     let mut torus_entities: Vec<Entity> = Vec::new();
 
     for (i, obj) in graphic_objects.into_iter().enumerate() {
-        info!("Создаём объект на позиции {:?}", obj.position);
-        let entity = spawn_graphic_object(&mut commands, &mut meshes, &mut materials, obj);
+        let entity = spawn_graphic_object(
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+            obj,
+            i % PALETTE.len(),
+            &PALETTE,
+        );
         torus_entities.push(entity);
 
         // UI-подпись с номером объекта (Bevy UI, экранные координаты).
@@ -130,9 +134,15 @@ struct ObjectLabel {
     /// Сущность тора, к которому привязана подпись.
     torus: Entity,
 }
-
-/// Скорость вращения объектов вокруг центра сцены (радианы в секунду).
 const TORUS_ORBIT_SPEED: f32 = 0.5;
+
+const PALETTE: [Vec3; 5] = [
+    Vec3::new(0.0, 0.0, 0.0), // чёрный
+    Vec3::new(1.0, 1.0, 1.0), // белый
+    Vec3::new(0.0, 0.0, 1.0), // синий
+    Vec3::new(1.0, 0.0, 0.0), // красный
+    Vec3::new(0.5, 0.0, 1.0), // фиолетовый
+];
 
 /// Система вращения всех графических объектов вокруг центра координат.
 ///
@@ -183,9 +193,7 @@ fn update_object_labels(
 /// Палитра цветов для перекрашивания графических объектов.
 #[derive(Resource)]
 struct ColorPalette {
-    colors: Vec<Color>,
-    current_index: usize,
-    automatic: bool,
+    colors: Vec<Vec3>,
     timer: Timer,
 }
 
@@ -193,87 +201,38 @@ impl ColorPalette {
     /// Конструктор для создания палитры цветов.
     fn new() -> Self {
         Self {
-            colors: vec![
-                Color::BLACK,
-                Color::WHITE,
-                Color::srgb(0.0, 0.0, 1.0),
-                Color::srgb(1.0, 0.0, 0.0),
-                Color::srgb(0.5, 0.0, 1.0),
-            ],
-            current_index: 0,
-            automatic: false,
+            colors: PALETTE.to_vec(),
             timer: Timer::from_seconds(1.0, TimerMode::Repeating),
         }
     }
-
-    /// Получаем текущий цвет.
-    fn current_color(&self) -> Color {
-        self.colors[self.current_index]
-    }
-
-    /// Функция для перехода к следующему цвету.
-    fn next_color(&mut self) {
-        self.current_index = (self.current_index + 1) % self.colors.len();
-    }
-
-    /// Функция для установки цвета по индексу.
-    fn set_color(&mut self, index: usize) {
-        self.current_index = index;
-    }
 }
 
-/// Система обработки нажатий клавиатуры для управления палитрой.
-fn listen_keyboard(keyboard: Res<ButtonInput<KeyCode>>, mut palette: ResMut<ColorPalette>) {
-    // Пробел переключает следующий цвет.
-    if keyboard.just_pressed(KeyCode::Space) {
-        palette.next_color();
-    }
-
-    // 1-5 переключают цвет по индексу.
-    if keyboard.just_pressed(KeyCode::Digit1) {
-        palette.set_color(0);
-    }
-
-    if keyboard.just_pressed(KeyCode::Digit2) {
-        palette.set_color(1);
-    }
-
-    if keyboard.just_pressed(KeyCode::Digit3) {
-        palette.set_color(2);
-    }
-
-    if keyboard.just_pressed(KeyCode::Digit4) {
-        palette.set_color(3);
-    }
-
-    if keyboard.just_pressed(KeyCode::Digit5) {
-        palette.set_color(4);
-    }
-
-    // A переключает автоматическую систему смены цвета.
-    if keyboard.just_pressed(KeyCode::KeyA) {
-        palette.automatic = !palette.automatic;
-    }
-}
-
-/// Система автоматической смены цвета при включённом таймере.
-fn automatic_color_system(time: Res<Time>, mut palette: ResMut<ColorPalette>) {
-    // Цвет меняется, если автопереключение включено и таймер завершился в этом кадре.
-    if palette.automatic && palette.timer.tick(time.delta()).just_finished() {
-        palette.next_color();
-    }
-}
-
-/// Обновляет цвет всех графических объектов на основе текущего цвета палитры.
-fn update_torus_color_system(
-    palette: Res<ColorPalette>,
-    mut materials: ResMut<Assets<StandardMaterial>>, // ресурс всех материалов
-    query: Query<&MeshMaterial3d<StandardMaterial>, With<GraphicObject>>, // материалы торов
+/// Система симуляции: раз в секунду сдвигает цвет каждого тора
+/// на следующий в палитре.
+fn simulation(
+    time: Res<Time>,
+    mut palette: ResMut<ColorPalette>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut query: Query<(
+        &mut GraphicObject,
+        &MeshMaterial3d<StandardMaterial>,
+    )>,
 ) {
-    for material_handle in &query {
-        // Пытаемся получить материал по его дескриптору (.0).
+    // Тикаем общий таймер. Если секунда ещё не прошла — ничего не делаем.
+    if !palette.timer.tick(time.delta()).just_finished() {
+        return;
+    }
+
+    let palette_len = palette.colors.len();
+
+    for (mut object, material_handle) in &mut query {
+        // Сдвигаем индекс цвета у объекта.
+        object.advance_color(palette_len);
+        object.color = palette.colors[object.color_index];
+
+        // Обновляем материал этого конкретного тора.
         if let Some(mut material) = materials.get_mut(&material_handle.0) {
-            material.base_color = palette.current_color(); // устанавливаем цвет
+            material.base_color = object.to_color();
         }
     }
 }
