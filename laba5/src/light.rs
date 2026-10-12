@@ -84,7 +84,7 @@ impl SceneLight {
 pub struct SceneLightMarker;
 
 /// Создаёт сущность источника света при старте приложения.
-pub fn spawn_scene_light(commands: &mut Commands, light: &SceneLight) {
+pub fn spawn_scene_light(commands: &mut Commands, light: &Res<SceneLight>) {
     commands.spawn((
         PointLight {
             color: light.color,
