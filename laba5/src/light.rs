@@ -68,12 +68,12 @@ impl SceneLight {
         }
     }
 
-    /// Преобразование в компонент `Transform`.
+    /// Преобразование в компонент Transform.
     pub fn transform(&self) -> Transform {
         Transform::from_translation(self.position)
     }
 
-    /// Преобразование в ресурс `GlobalAmbientLight`.
+    /// Преобразование в ресурс GlobalAmbientLight.
     pub fn ambient_light(&self) -> GlobalAmbientLight {
         GlobalAmbientLight {
             color: self.ambient_color,
@@ -83,7 +83,7 @@ impl SceneLight {
     }
 }
 
-/// Маркерный компонент сущности источника света, управляемой ресурсом [`SceneLight`].
+/// Маркерный компонент сущности источника света, управляемой ресурсом SceneLight.
 #[derive(Component)]
 pub struct SceneLightMarker;
 
@@ -101,7 +101,7 @@ pub fn spawn_scene_light(commands: &mut Commands, light: &Res<SceneLight>) {
     ));
 }
 
-/// Переносит параметры ресурса [`SceneLight`] в сущность источника и
+/// Переносит параметры ресурса SceneLight в сущность источника и
 /// в ресурс фонового освещения.
 pub fn apply_light(
     light: Res<SceneLight>,

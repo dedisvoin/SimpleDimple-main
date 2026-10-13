@@ -26,7 +26,7 @@ fn setup_scene(
     camera_rig: Res<CameraRig>,
     light: Res<SceneLight>,
 ) {
-    // Один меш тора используется всеми объектами.
+
     let torus = meshes.add(Torus::new(0.4, 1.0));
 
     // Загружаем материалы из файлов.
