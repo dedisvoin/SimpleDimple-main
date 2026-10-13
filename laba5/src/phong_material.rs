@@ -22,10 +22,10 @@ pub struct PhongMaterial {
 impl Default for PhongMaterial {
     fn default() -> Self {
         Self {
-            diffuse: Vec4::new(0.8, 0.8, 0.8, 1.0),
-            specular: Vec4::new(0.5, 0.5, 0.5, 1.0),
-            emission: Vec4::new(0.0, 0.0, 0.0, 1.0),
-            shininess: 32.0,
+            diffuse: Vec4::new(0.8, 0.8, 0.8, 1.0), // основной цвет
+            specular: Vec4::new(0.5, 0.5, 0.5, 1.0), // цвет блика
+            emission: Vec4::new(0.0, 0.0, 0.0, 1.0), // самосвечение
+            shininess: 32.0,                                     // концентрация блика
         }
     }
 }
@@ -87,7 +87,7 @@ impl PhongMaterial {
     }
 }
 
-/// Перевод степени отполированности `p` в шероховатость по модели Блинна–Фонга.
+/// Перевод степени отполированности `p` в шероховатость по модели фонга.
 fn shininess_to_roughness(shininess: f32) -> f32 {
     let alpha = (2.0 / (shininess.max(0.0) + 2.0)).sqrt();
     alpha.sqrt().clamp(0.089, 1.0)

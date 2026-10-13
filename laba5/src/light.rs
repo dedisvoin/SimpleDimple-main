@@ -20,6 +20,7 @@ pub struct SceneLight {
     ambient_brightness: f32,
 }
 
+
 impl SceneLight {
     /// Конструктор: белый источник в указанной позиции.
     pub fn new(position: Vec3) -> Self {
@@ -34,16 +35,19 @@ impl SceneLight {
     }
 
     /// Задание цвета источника.
+    #[allow(dead_code)]
     pub fn set_color(&mut self, color: Color) {
         self.color = color;
     }
 
     /// Задание интенсивности источника (световой поток, люмены).
+    #[allow(dead_code)]
     pub fn set_intensity(&mut self, intensity: f32) {
         self.intensity = intensity;
     }
 
     /// Задание фонового освещения сцены.
+    #[allow(dead_code)]
     pub fn set_ambient(&mut self, color: Color, brightness: f32) {
         self.ambient_color = color;
         self.ambient_brightness = brightness;
