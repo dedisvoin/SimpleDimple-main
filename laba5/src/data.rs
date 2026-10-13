@@ -12,10 +12,10 @@ pub fn initial_light_position() -> Vec3 {
 
 /// Список файлов материалов, загружаемых при старте.
 pub const MATERIAL_FILES: [&str; 4] = [
-    "assets/materials/red_glossy.txt",
-    "assets/materials/blue_matte.txt",
-    "assets/materials/green_satin.txt",
-    "assets/materials/white_emissive.txt",
+    "assets/materials/red.txt",
+    "assets/materials/blue.txt",
+    "assets/materials/green.txt",
+    "assets/materials/white.txt",
 ];
 
 /// Описание размещения одного графического объекта на сцене.
