@@ -100,10 +100,6 @@ impl Default for MapObjects {
 }
 
 impl MapObjects {
-    /// Возвращает сущность в ячейке, если она занята.
-    pub fn get(&self, position: IVec2) -> Option<Entity> {
-        self.cells[position.y as usize][position.x as usize]
-    }
 
     /// Запоминает сущность в ячейке.
     pub fn set(&mut self, position: IVec2, entity: Entity) {
