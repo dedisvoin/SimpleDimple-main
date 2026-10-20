@@ -49,7 +49,7 @@ pub const PASSABILITY_MAP: [[u8; MAP_SIZE]; MAP_SIZE] = [
 
 pub const MESH_FILES: [&str; 3] = [
     "assets/meshes/SimplePlane.obj", // 0 — плоскость
-    "assets/meshes/ChamferBox.obj",  // 1 — куб со скруглёнными рёбрами
+    "assets/meshes/fuckbox.obj",  // 1 — куб со скруглёнными рёбрами
     "assets/meshes/Box.obj",         // 2 — куб
 ];
 
