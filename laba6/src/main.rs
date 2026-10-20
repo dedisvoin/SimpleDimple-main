@@ -77,11 +77,7 @@ fn setup_scene(
 
             let position = IVec2::new(x as i32, y as i32);
 
-            // В одной ячейке не может находиться два объекта.
-            if map_objects.get(position).is_some() {
-                eprintln!("Ячейка {position} уже занята");
-                continue;
-            }
+
 
             let graphic_object = GraphicObject::new(
                 Vec3::ZERO,

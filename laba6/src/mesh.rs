@@ -4,7 +4,7 @@ use bevy::asset::RenderAssetUsages;
 use bevy::mesh::PrimitiveTopology;
 use bevy::prelude::*;
 
-/// Вершина полигональной сетки и её атрибуты.
+/// Вершина полигональной сетки
 #[derive(Debug, Clone, Copy)]
 pub struct Vertex {
     /// Геометрические координаты в системе координат модели.
@@ -18,9 +18,6 @@ pub struct Vertex {
 }
 
 /// Ссылка на атрибуты одной вершины полигона в obj-файле.
-///
-/// Номера хранятся уже уменьшенными на единицу: в файле нумерация начинается
-/// с единицы, а в массивах Rust — с нуля.
 #[derive(Debug, Clone, Copy)]
 struct FaceIndex {
     position: usize,
@@ -29,9 +26,6 @@ struct FaceIndex {
 }
 
 /// Полигональная сетка, загруженная из obj-файла.
-///
-/// Тип движка `Mesh` уже занят, поэтому собственная структура массива вершин
-/// называется `ObjMesh`.
 pub struct ObjMesh {
     /// Массив вершин полигональной сетки.
     vertices: Vec<Vertex>,
@@ -42,12 +36,10 @@ impl ObjMesh {
     pub fn load(path: &str) -> Result<Self, String> {
         let text = fs::read_to_string(path).map_err(|error| format!("{path}: {error}"))?;
 
-        // Этап 1. Вспомогательные массивы нужны только во время загрузки,
-        // поэтому они локальные, а не поля структуры.
         let mut positions: Vec<[f32; 3]> = Vec::new();
         let mut normals: Vec<[f32; 3]> = Vec::new();
         let mut uvs: Vec<[f32; 2]> = Vec::new();
-        // Каждый полигон — список вершин, вершина — тройка индексов (v, vt, vn).
+        // Массив полигонов
         let mut faces: Vec<Vec<FaceIndex>> = Vec::new();
 
         for (index, line) in text.lines().enumerate() {
@@ -78,12 +70,11 @@ impl ObjMesh {
             }
         }
 
-        // Этап 2. Сборка массива вершин.
         let mut vertices = Vec::new();
 
         for face in &faces {
-            // Многоугольник разбивается на треугольники веером:
-            // (0, 1, 2), (0, 2, 3), (0, 3, 4) и т. д.
+            // Многоугольник разбивается на треугольники веером
+            // (0, 1, 2), (0, 2, 3), (0, 3, 4) ...
             for k in 1..face.len() - 1 {
                 let triangle = [face[0], face[k], face[k + 1]];
 
@@ -92,7 +83,7 @@ impl ObjMesh {
                     .into_iter()
                     .collect::<Result<Vec<_>, _>>()?;
 
-                // Нормаль треугольника — на случай, если в файле нормали не заданы.
+                // вычисляем нормаль треугольника, если в нормали не заданы.
                 let flat_normal = triangle_normal(corners[0], corners[1], corners[2]);
 
                 for (corner, position) in triangle.iter().zip(corners) {
@@ -132,7 +123,7 @@ impl ObjMesh {
     pub fn to_bevy_mesh(&self) -> Mesh {
         let positions: Vec<[f32; 3]> = self.vertices.iter().map(|v| v.position).collect();
         let normals: Vec<[f32; 3]> = self.vertices.iter().map(|v| v.normal).collect();
-        // В bevy ось v текстурных координат направлена вниз.
+
         let uvs: Vec<[f32; 2]> = self
             .vertices
             .iter()

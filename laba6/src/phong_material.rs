@@ -4,8 +4,7 @@ use bevy::prelude::*;
 
 /// Параметры материала в терминах модели освещения Фонга.
 ///
-/// Каждый цвет задаётся четвёркой `(r, g, b, a)` в диапазоне `[0.0, 1.0]`.
-/// Материал не используется движком напрямую: метод [`PhongMaterial::to_standard_material`]
+/// Материал не используется движком напрямую: метод PhongMaterial::to_standard_material
 /// переводит его в стандартный материал Bevy.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PhongMaterial {
@@ -73,7 +72,7 @@ impl PhongMaterial {
         let d = self.diffuse;
         let e = self.emission;
 
-        // Сила блика — наибольшая из компонент зеркальной составляющей.
+        // Сила блика - наибольшая из компонент зеркальной составляющей.
         let specular_strength = self.specular.x.max(self.specular.y).max(self.specular.z);
 
         StandardMaterial {

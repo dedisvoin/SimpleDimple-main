@@ -45,8 +45,6 @@ impl GameObject {
 }
 
 /// Перевод логических координат ячейки в мировые координаты.
-///
-/// Ячейка (10, 10) должна находиться в центре сцены — в точке (0, 0, 0).
 pub fn logical_to_world(position: IVec2) -> Vec3 {
     Vec3::new(
         (position.x - MAP_CENTER) as f32 * CELL_SIZE,
