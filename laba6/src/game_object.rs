@@ -3,9 +3,7 @@ use bevy::prelude::*;
 use crate::data::{CELL_SIZE, MAP_CENTER, OBJECT_HEIGHT};
 use crate::graphic_object::GraphicObject;
 
-/// Игровой объект — логическая абстракция объекта, с которым взаимодействует
-/// пользователь.
-///
+/// Игровой объект
 /// Содержит логические координаты на карте и собственный графический объект,
 /// которому делегирует вывод на экран (композиция).
 #[derive(Component, Debug, Clone)]
@@ -62,6 +60,6 @@ pub fn spawn_game_object(commands: &mut Commands, object: GameObject) -> Entity 
 /// Обновляет матрицу модели игровых объектов при изменении их координат.
 pub fn sync_game_objects(mut query: Query<(&GameObject, &mut Transform), Changed<GameObject>>) {
     for (object, mut transform) in &mut query {
-        *transform = object.graphic_object().to_transform();
+        transform.clone_from(&object.graphic_object().to_transform());
     }
 }

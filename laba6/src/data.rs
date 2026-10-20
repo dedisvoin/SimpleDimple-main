@@ -47,25 +47,21 @@ pub const PASSABILITY_MAP: [[u8; MAP_SIZE]; MAP_SIZE] = [
     [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
 ];
 
-/// Список файлов мешей. Индекс в массиве является номером меша.
 pub const MESH_FILES: [&str; 3] = [
-    "assets/meshes/SimplePlane.obj", // 0 — плоскость (основание сцены)
+    "assets/meshes/SimplePlane.obj", // 0 — плоскость
     "assets/meshes/ChamferBox.obj",  // 1 — куб со скруглёнными рёбрами
     "assets/meshes/Box.obj",         // 2 — куб
 ];
 
-/// Список файлов материалов. Индекс в массиве является номером материала.
+
 pub const MATERIAL_FILES: [&str; 4] = [
-    "assets/materials/light_green.txt",    // 0 — основание сцены
-    "assets/materials/yellow_chamfer.txt", // 1 — жёлтый глянцевый
-    "assets/materials/light_gray.txt",     // 2 — светло-серый
-    "assets/materials/dark_gray.txt",      // 3 — тёмно-серый (внешние стены)
+    "assets/materials/light_green.txt",    // 0 — пол
+    "assets/materials/yellow_chamfer.txt", // 1 — жёлтый
+    "assets/materials/light_gray.txt",     // 2 — светло серый
+    "assets/materials/dark_gray.txt",      // 3 — тёмно серый
 ];
 
-/// Соответствие типа объекта паре «номер меша — номер материала».
-///
-/// Ноль означает пустую ячейку. Объекты типов 2 и 3 используют один и тот же
-/// меш с разными материалами.
+/// Соответствие типа объекта паре (номер меша : номер материала)
 pub fn object_type(kind: u8) -> Option<(usize, usize)> {
     match kind {
         0 => None,
@@ -84,8 +80,6 @@ pub struct SceneAssets {
 }
 
 /// Идентификаторы сущностей игровых объектов по ячейкам карты.
-///
-/// Значение [`None`] означает, что ячейка пуста.
 #[derive(Resource)]
 pub struct MapObjects {
     cells: [[Option<Entity>; MAP_SIZE]; MAP_SIZE],
@@ -100,7 +94,6 @@ impl Default for MapObjects {
 }
 
 impl MapObjects {
-
     /// Запоминает сущность в ячейке.
     pub fn set(&mut self, position: IVec2, entity: Entity) {
         self.cells[position.y as usize][position.x as usize] = Some(entity);
