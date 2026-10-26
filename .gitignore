@@ -1,6 +1,7 @@
 **/*.exe
 **/*.pdb
 **/*.obj
+!**/assets/**/*
 
 **/target/
 
