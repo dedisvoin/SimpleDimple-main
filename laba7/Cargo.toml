@@ -1,0 +1,15 @@
+[package]
+name = "bevy-lav04"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = "0.19.1"
+serde = "1.0.229"
+serde_json = "1.0.154"
+
+# Оптимизация компиляции (ускоряет сборку в debug-режиме)
+[profile.dev]
+opt-level = 1
+[profile.dev.package."*"]
+opt-level = 3
